@@ -84,7 +84,6 @@ namespace BizHawk.Emulation.Common.Cores.MC6800
 							{RD, src, SPl, SPh,
 							IDLE,
 							INC16, SPl, SPh,
-							IDLE,
 							OP };
 			}
 			else
@@ -93,7 +92,6 @@ namespace BizHawk.Emulation.Common.Cores.MC6800
 							{RD_P, src, SPl, SPh,
 							IDLE,
 							INC16, SPl, SPh,
-							IDLE,
 							OP };
 			}
 		}

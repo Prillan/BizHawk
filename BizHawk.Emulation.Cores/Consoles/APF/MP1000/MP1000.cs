@@ -43,7 +43,6 @@ namespace BizHawk.Emulation.Cores.APF.MP1000
 		public MC6800 cpu;
 		public MC6847 mc6847;
 		public MC6821 mc6821;
-		public Pokey pokey;
 
 		public MP1000(CoreComm comm, GameInfo game, byte[] rom, string gameDbFn, object settings, object syncSettings)
 		{
@@ -51,7 +50,6 @@ namespace BizHawk.Emulation.Cores.APF.MP1000
 
 			mc6847 = new MC6847();
 			mc6821 = new MC6821();
-			pokey = new Pokey();
 
 			cpu = new MC6800
 			{
@@ -115,7 +113,6 @@ namespace BizHawk.Emulation.Cores.APF.MP1000
 
 			mc6847.Core = this;
 			mc6821.Core = this;
-			pokey.Core = this;
 
 			ser.Register<IVideoProvider>(this);
 			ser.Register<ISoundProvider>(this);
@@ -142,8 +139,7 @@ namespace BizHawk.Emulation.Cores.APF.MP1000
 
 			mc6847.Reset();
 			mc6821.Reset();
-			pokey.Reset();
-			
+
 			Maria_regs = new byte[0x20];
 			RAM_LO = new byte[0x1000];
 

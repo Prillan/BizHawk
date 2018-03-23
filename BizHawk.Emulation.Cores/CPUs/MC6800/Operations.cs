@@ -5,6 +5,7 @@ namespace BizHawk.Emulation.Common.Cores.MC6800
 {
 	public partial class MC6800
 	{
+		// NOTE: Reading automatically increments source address
 		public void Read_Func(ushort dest, ushort src_l, ushort src_h)
 		{
 			Regs[dest] = ReadMemory((ushort)(Regs[src_l] | (Regs[src_h]) << 8));

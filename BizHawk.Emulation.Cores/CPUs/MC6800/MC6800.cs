@@ -65,7 +65,6 @@ namespace BizHawk.Emulation.Common.Cores.MC6800
 		}
 
 		// Memory Access 
-
 		public Func<ushort, byte> ReadMemory;
 		public Action<ushort, byte> WriteMemory;
 		public Func<ushort, byte> PeekMemory;
