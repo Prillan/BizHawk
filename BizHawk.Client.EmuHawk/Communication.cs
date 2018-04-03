@@ -13,6 +13,7 @@ using BizHawk.Client.Common;
 using BizHawk.Emulation.Common.IEmulatorExtensions;
 using System.Windows.Forms;
 using System.IO;
+using System.Drawing.Imaging;
 
 namespace BizHawk.Client.EmuHawk
 {
@@ -163,172 +164,93 @@ namespace BizHawk.Client.EmuHawk
 		}
 		public class SocketServer
 		{
-
-			public string ip = "192.168.178.21";
-			public int port = 9999;
-			public Decoder decoder = Encoding.UTF8.GetDecoder();
-			public Socket soc = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-			public IPAddress ipAdd;
-			public IPEndPoint remoteEP;
-			public IVideoProvider currentVideoProvider = null;
-			public bool connected = false;
-			public bool initialized = false;
-			public int retries = 10;
-			public bool success = false; //indicates whether the last command was executed succesfully
-
-			public void Initialize(IVideoProvider _currentVideoProvider)
+			private string ip = "127.0.0.1";
+			private int port = 9999;
+			private int receiveTimeout = 0;
+			private TcpClient client;
+			private StreamReader reader;
+			private StreamWriter writer;
+			
+			public bool Connected
 			{
-				currentVideoProvider = _currentVideoProvider;
-				SetIp(ip, port);
-				initialized = true;
-				
+				get
+				{
+					return client != null && client.Connected;
+				}
 			}
+
+			public string Ip { get => ip; set => ip = value; }
+			public int Port { get => port; set => port = value; }
+			public int ReceiveTimeout {
+				get => receiveTimeout;
+				set {
+					receiveTimeout = value;
+					if (Connected)
+					{
+						client.ReceiveTimeout = value;
+					}
+				}
+			}
+
 			public void Connect()
 			{
-				if (!initialized)
-				{
-					Initialize(currentVideoProvider);
-				}
-				remoteEP = new IPEndPoint(ipAdd, port);
-				soc = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-				soc.Connect(remoteEP);
-				connected = true;
-				soc.ReceiveTimeout = 5;
-				
-			}
-			public void SetIp(string ip_)
-			{
-				ip = ip_;
-				ipAdd = System.Net.IPAddress.Parse(ip);
-				remoteEP = new IPEndPoint(ipAdd, port);
-			}
-			public void SetIp(string ip_, int port_)
-			{
-				ip = ip_;
-				port = port_;
-				ipAdd = System.Net.IPAddress.Parse(ip);
-				remoteEP = new IPEndPoint(ipAdd, port);
-				
-			}
-			public void SetTimeout(int timeout)
-			{
-				soc.ReceiveTimeout = timeout;
-			}
-			public void SocketConnected()
-			{
-				bool part1 = soc.Poll(1000, SelectMode.SelectRead);
-				bool part2 = (soc.Available == 0);
-				if (part1 && part2)
-					connected = false;
-				else
-					connected = true;
-			}
-			public int SendString(string SendString)
-			{
-				
-				int sentBytes = SendBytes(Encoding.ASCII.GetBytes(SendString));
-				success = sentBytes > 0;
-				return sentBytes;
-			}
-			public int SendBytes(byte[] SendBytes)
-			{
-				int sentBytes = 0;
 				try
 				{
-					sentBytes = soc.Send(SendBytes);
+					client.Close();
 				}
-				catch
+				catch (Exception)
 				{
-					sentBytes = -1;
 				}
-				return sentBytes;
+				try
+				{
+					reader.Dispose();
+				}
+				catch (Exception)
+				{
+					
+				}
+				try
+				{
+					writer.Dispose();
+				}
+				catch (Exception)
+				{
+
+				}
+
+				client = new TcpClient(Ip, Port);
+				reader = new StreamReader(client.GetStream());
+				writer = new StreamWriter(client.GetStream());
 			}
 			
-			public string SendScreenshot()
+			public void WriteLine(string message)
 			{
-				return SendScreenshot(0);
+				writer.WriteLine(message);
+				writer.Flush();
 			}
-			public string SendScreenshot(int waitingTime)
+			
+			public void WriteScreenshot()
 			{
-				if (!connected)
-				{
-					Connect();
-				}
 				ScreenShot screenShot = new ScreenShot();
 				using (BitmapBuffer bb = screenShot.MakeScreenShotImage())
 				{
 					using (var img = bb.ToSysdrawingBitmap())
 					{
-						byte[] bmpBytes = screenShot.ImageToByte(img);
-						int sentBytes = 0;
-						int tries = 0;
-						while (sentBytes <= 0 && tries < retries)
+						using (MemoryStream ms = new MemoryStream(img.Height * img.Width * 3))
 						{
-							try
-							{
-								tries++;
-								sentBytes = SendBytes(bmpBytes);
-							}
-							catch (SocketException)
-							{
-								Connect();
-								sentBytes = 0;
-							}
-							if (sentBytes == -1)
-							{
-								Connect();
-							}
+							img.Save(ms, ImageFormat.Png);
+							WriteLine(ms.Length.ToString());
+							ms.Seek(0, SeekOrigin.Begin);
+							ms.CopyTo(client.GetStream());
 						}
-						success = (tries < retries);
 					}
+					client.GetStream().Flush();
 				}
-				String resp = "";
-				if (!success)
-				{
-					resp = "Screenshot could not be sent";
-				} else
-				{
-					resp = "Screenshot was sent";
-				}
-				if (waitingTime == 0)
-				{
-					return resp;
-				}
-				resp = "";
-				resp = ReceiveMessage();
-				if (resp == "")
-				{
-					resp = "Failed to get a response";
-				}
-				return resp;
 			}
-			public string ReceiveMessage()
-			{
-				if (!connected)
-				{
-					Connect();
-				}
-				string resp = "";
-				byte[] receivedBytes = new byte[256];
-				int receivedLength = 1;
 
-				while (receivedLength > 0)
-				{
-					try
-					{
-						receivedLength = soc.Receive(receivedBytes, receivedBytes.Length, 0);
-						resp += Encoding.ASCII.GetString(receivedBytes);
-					} catch
-					{
-						receivedLength = 0;
-					}
-				}
-				
-				return resp;
-			}
-			public bool Successful()
+			public string ReadLine()
 			{
-				return success;
+				return reader.ReadLine();
 			}
 		}
 
@@ -427,7 +349,11 @@ namespace BizHawk.Client.EmuHawk
 			}
 			public byte[] ImageToByte(Image img)
 			{
-				return (byte[])converter.ConvertTo(img, typeof(byte[]));
+				using (MemoryStream ms = new MemoryStream())
+				{
+					img.Save(ms, ImageFormat.Bmp);
+					return ms.GetBuffer();
+				}
 			}
 			public string ImageToString(Image img)
 			{

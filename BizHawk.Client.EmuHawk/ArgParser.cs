@@ -147,13 +147,12 @@ namespace BizHawk.Client.EmuHawk
 			//inititalize socket server
 			if (socket_ip != null && socket_port > -1)
 			{
-				GlobalWin.socketServer.initialized = true;
-				GlobalWin.socketServer.SetIp(socket_ip, socket_port);
+				GlobalWin.SocketServer.Ip = socket_ip;
+				GlobalWin.SocketServer.Port = socket_port;
 			}
 			else if (socket_ip != null)
 			{
-				GlobalWin.socketServer.initialized = true;
-				GlobalWin.socketServer.SetIp(socket_ip);
+				GlobalWin.SocketServer.Ip = socket_ip;
 			}
 			
 			//initialize mapped memory files

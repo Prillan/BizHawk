@@ -41,37 +41,41 @@ namespace BizHawk.Client.EmuHawk
 			return list.ToString();
 		}
 
-		[LuaMethod("socketServerScreenShot", "sends a screenshot to the Socket server")]
-		public string SocketServerScreenShot()
+		[LuaMethod("socketConfig", "Set the ip and port to connect to, default is 127.0.0.1:9999")]
+		public void SocketConfig(string ip, int port)
 		{
-			return GlobalWin.socketServer.SendScreenshot();
-		}
-		[LuaMethod("socketServerScreenShotResponse", "sends a screenshot to the Socket server and retrieves the response")]
-		public string SocketServerScreenShotResponse()
-		{
-			return GlobalWin.socketServer.SendScreenshot(1000).ToString();
+			GlobalWin.SocketServer.Ip = ip;
+			GlobalWin.SocketServer.Port = port;
 		}
 
-		[LuaMethod("socketServerSend", "sends a string to the Socket server")]
-		public string SocketServerSend(string SendString)
+		[LuaMethod("socketConnect", "Connect to the server")]
+		public bool SocketConnect()
 		{
-			return "Sent : " + GlobalWin.socketServer.SendString(SendString).ToString() + " bytes";
-		}
-		[LuaMethod("socketServerResponse", "receives a message from the Socket server")]
-		public string SocketServerResponse()
-		{
-			return GlobalWin.socketServer.ReceiveMessage();
+			GlobalWin.SocketServer.Connect();
+			return GlobalWin.SocketServer.Connected;
 		}
 
-		[LuaMethod("socketServerSuccessful", "returns the status of the last Socket server action")]
-		public bool SocketServerSuccessful()
+		[LuaMethod("socketSendScreenshot", "Sends a screenshot (BMP) to the server")]
+		public void SocketSendScreenshot()
 		{
-			return GlobalWin.socketServer.Successful();
+			GlobalWin.SocketServer.WriteScreenshot();
 		}
-		[LuaMethod("socketServerSetTimeout", "sets the timeout in milliseconds for receiving messages")]
-		public void SocketServerSetTimeout(int timeout)
+
+		[LuaMethod("socketSend", "sends a string to the Socket server")]
+		public void SocketSend(string message)
 		{
-			GlobalWin.socketServer.SetTimeout(timeout);
+			GlobalWin.SocketServer.WriteLine(message);
+		}
+		[LuaMethod("socketReceive", "receives a message from the Socket server")]
+		public string SocketReceive()
+		{
+			return GlobalWin.SocketServer.ReadLine();
+		}
+		
+		[LuaMethod("socketSetTimeout", "sets the timeout in milliseconds for receiving messages")]
+		public void SocketSetTimeout(int timeout)
+		{
+			GlobalWin.SocketServer.ReceiveTimeout = timeout;
 		}
 		// All MemoryMappedFile related methods
 		[LuaMethod("mmfSetFilename", "Sets the filename for the screenshots")]

@@ -25,7 +25,7 @@ namespace BizHawk.Client.EmuHawk
 
 		public static int ExitCode;
 		public static Communication.HttpCommunication httpCommunication = new Communication.HttpCommunication();
-		public static Communication.SocketServer socketServer = new Communication.SocketServer();
+		public static Communication.SocketServer SocketServer = new Communication.SocketServer();
 		public static Communication.MemoryMappedFiles memoryMappedFiles = new Communication.MemoryMappedFiles();
 	}
 }
