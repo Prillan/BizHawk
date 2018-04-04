@@ -55,18 +55,18 @@ namespace BizHawk.Client.EmuHawk
 			return GlobalWin.SocketServer.Connected;
 		}
 
-		[LuaMethod("socketSendScreenshot", "Sends a screenshot (BMP) to the server")]
+		[LuaMethod("socketSendScreenshot", "Sends a screenshot (PNG) to the server")]
 		public void SocketSendScreenshot()
 		{
 			GlobalWin.SocketServer.WriteScreenshot();
 		}
 
-		[LuaMethod("socketSend", "sends a string to the Socket server")]
+		[LuaMethod("socketSendLine", "sends a string to the Socket server")]
 		public void SocketSend(string message)
 		{
 			GlobalWin.SocketServer.WriteLine(message);
 		}
-		[LuaMethod("socketReceive", "receives a message from the Socket server")]
+		[LuaMethod("socketReceiveLine", "receives a message from the Socket server")]
 		public string SocketReceive()
 		{
 			return GlobalWin.SocketServer.ReadLine();
